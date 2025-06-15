@@ -15,9 +15,12 @@
 #   gcc g++ make cmake tmux libssl-dev pkg-config ripgrep
 #
 # -Snap packages
+#   Brave
+#   Vlc
 #   Spotify
 #   Alacritty
 #   WebStorm
+#   Code
 #   Obsidian
 
 set -e  # Exit immediately if a command exits with a non-zero status
@@ -62,18 +65,6 @@ else
     rustc --version
 fi
 
-# Install Brave Browser
-section "Installing Brave Browser"
-if ! command_exists brave-browser; then
-    sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
-    sudo apt update
-    sudo apt install -y brave-browser
-    brave-browser --version
-else
-    echo "Brave Browser is already installed"
-fi
-
 # Install Nushell v0.103.0 from releases
 section "Installing Nushell"
 if ! command_exists nu; then
@@ -102,7 +93,11 @@ fi
 
 # Install tmux config
 section "Installing tmux config"
-git clone https://github.com/cloud-np/tmux.git $HOME/.config/tmux
+if [ ! -d "$HOME/.config/tmux" ]; then
+    git clone https://github.com/cloud-np/tmux.git $HOME/.config/tmux
+else
+    echo "Tmux config already exists, skipping..."
+fi
 
 # Install Neovim from GitHub releases
 section "Installing Neovim"
@@ -127,15 +122,28 @@ else
     nvim --version
 fi
 
-echo "Installing Nerd Fonts..."
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/JetBrainsMono.zip
-unzip JetBrainsMono.zip -d JetBrainsMonoFont
-mkdir -p ~/.local/share/fonts
-mv ./JetBrainsMonoFont/*.ttf ~/.local/share/fonts
-fc-cache -f -v
+# Install Nerd Fonts
+if [ ! -f ~/.local/share/fonts/JetBrainsMonoNerdFont-Regular.ttf ]; then
+    echo "Installing Nerd Fonts..."
+    wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/JetBrainsMono.zip
+    unzip JetBrainsMono.zip -d JetBrainsMonoFont
+    mkdir -p ~/.local/share/fonts
+    mv ./JetBrainsMonoFont/*.ttf ~/.local/share/fonts
+    fc-cache -f -v
+    # Clean up
+    rm -f JetBrainsMono.zip
+    rm -rf JetBrainsMonoFont
+else
+    echo "JetBrains Mono Nerd Font already installed, skipping..."
+fi
 
-echo "Installing Starship..."
-curl -sS https://starship.rs/install.sh | sh
+# Install Starship
+if ! command -v starship >/dev/null 2>&1; then
+    echo "Installing Starship..."
+    curl -sS https://starship.rs/install.sh | sh
+else
+    echo "Starship already installed, skipping..."
+fi
 
 # Clone Neovim configuration
 section "Setting up Neovim configuration"
@@ -151,6 +159,12 @@ section "Installing fnm"
 if ! command_exists fnm; then
     echo "Installing fnm..."
     curl -fsSL https://fnm.vercel.app/install | bash
+
+    # Add to path to be able to install Node after
+    if [ -d "$FNM_PATH" ]; then
+        export PATH="$FNM_PATH:$PATH"
+        eval "`fnm env`"
+    fi
 else
     echo "fnm is already installed"
 fi
@@ -182,6 +196,22 @@ if ! command_exists snap; then
     sudo systemctl enable --now snapd.socket
 fi
 
+# Install Brave
+echo "Installing Brave..."
+if ! snap list | grep -q brave; then
+    sudo snap install brave
+else
+    echo "Brave is already installed"
+fi
+
+# Install Vlc
+echo "Installing Vlc..."
+if ! snap list | grep -q vlc; then
+    sudo snap install vlc
+else
+    echo "Vlc is already installed"
+fi
+
 # Install Spotify
 echo "Installing Spotify..."
 if ! snap list | grep -q spotify; then
@@ -196,6 +226,9 @@ if ! snap list | grep -q alacritty; then
     sudo snap install alacritty --classic
     # Make it default terminal
     gsettings set org.gnome.desktop.default-applications.terminal exec 'alacritty'
+    # Maybe more robust
+    # sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /snap/bin/alacritty 50
+    # sudo update-alternatives --config x-terminal-emulator
 else
     echo "Alacritty is already installed"
 fi
@@ -206,6 +239,14 @@ if ! snap list | grep -q webstorm; then
     sudo snap install webstorm --classic
 else
     echo "WebStorm is already installed"
+fi
+
+# Install VScode
+echo "Installing VScode..."
+if ! snap list | grep -q code; then
+    sudo snap install code --classic
+else
+    echo "VScode is already installed"
 fi
 
 # Install Obsidian
@@ -228,7 +269,9 @@ echo "You may need to restart your system for all changes to take effect."
 section "Installed versions"
 echo "Rust: $(rustc --version)"
 echo "Neovim: $(nvim --version | head -n 1)"
-echo "Brave: $(brave-browser --version 2>/dev/null || echo 'Not found - may need restart')"
+echo "Brave: $(brave --version 2>/dev/null || echo 'Not installed')"
+echo "Vlc: $(snap list | grep vlc || echo 'Not installed')"
+echo "VScode: $(snap list | grep code || echo 'Not installed')"
 echo "Spotify: $(snap list | grep spotify || echo 'Not installed')"
 echo "Alacritty: $(snap list | grep alacritty || echo 'Not installed')"
 echo "WebStorm: $(snap list | grep webstorm || echo 'Not installed')"
