@@ -7,7 +7,7 @@
 # Nerdfonts JetBrainsMono v3.3
 # Nushell v0.103.0
 # fnm
-# Node v23.10.0
+# Node v24.0.0
 # pnpm
 # -Debian packages
 #   curl wget unzip apt-transport-https gnupg 
@@ -171,8 +171,8 @@ fi
 
 # Install Node
 section "Installing Node"
-echo "Installing Node v23.10.0..."
-fnm install v23.10.0
+echo "Installing Node v24.0.0..."
+fnm install v24.0.0
 echo "Installing pnpm"
 npm i -g pnpm
 
