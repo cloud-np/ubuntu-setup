@@ -4,6 +4,7 @@
 # This script installs 
 # Rust
 # nvim v0.11.0
+# Neovide
 # Nerdfonts JetBrainsMono v3.3
 # Nushell v0.103.0
 # fnm
@@ -121,6 +122,18 @@ else
     echo "Neovim is already installed"
     nvim --version
 fi
+
+section "Installing Neovide"
+curl -L -o "$TEMP_DIR/neovide.AppImage" \
+    "https://github.com/neovide/neovide/releases/latest/download/neovide.AppImage"
+if [ ! -f "$TEMP_DIR/neovide.AppImage" ]; then
+    echo "❌ Failed to download Neovide AppImage"
+fi
+
+echo "✅ Download completed successfully"
+# Move to /usr/local/bin and make executable
+sudo mv "$TEMP_DIR/neovide.AppImage" /usr/local/bin/neovide
+sudo chmod +x /usr/local/bin/neovide
 
 # Install Nerd Fonts
 if [ ! -f ~/.local/share/fonts/JetBrainsMonoNerdFont-Regular.ttf ]; then
@@ -269,6 +282,7 @@ echo "You may need to restart your system for all changes to take effect."
 section "Installed versions"
 echo "Rust: $(rustc --version)"
 echo "Neovim: $(nvim --version | head -n 1)"
+echo "Neovide: $(neovide --version 2>/dev/null || echo 'Not installed')"
 echo "Brave: $(brave --version 2>/dev/null || echo 'Not installed')"
 echo "Vlc: $(snap list | grep vlc || echo 'Not installed')"
 echo "VScode: $(snap list | grep code || echo 'Not installed')"
@@ -276,4 +290,3 @@ echo "Spotify: $(snap list | grep spotify || echo 'Not installed')"
 echo "Alacritty: $(snap list | grep alacritty || echo 'Not installed')"
 echo "WebStorm: $(snap list | grep webstorm || echo 'Not installed')"
 echo "Obsidian: $(snap list | grep obsidian || echo 'Not installed')"
-
